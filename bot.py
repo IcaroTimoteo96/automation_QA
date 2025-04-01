@@ -3,11 +3,14 @@ import json
 import requests
 import flask
 from flask import Flask, request
+from dotenv import load_dotenv
+
+load_dotenv() #Carregar variáveis do arquivo .env
 
 # Configurações da API do WhatsApp Cloud
-ACCESS_TOKEN = "SEU_ACCESS_TOKEN"
-VERIFY_TOKEN = "token_verify"
-WHATSAPP_API_URL = "https://graph.facebook.com/v18.0/me/messages"
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
+WHATSAPP_API_URL = os.getenv("WHATSAPP_API_URL")
 
 # Nome do arquivo de datas
 BAPTISM_FILE = "batismo.txt"
