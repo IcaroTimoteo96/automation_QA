@@ -67,17 +67,26 @@ def webhook_receive():
 # Função para enviar mensagem no WhatsApp
 def send_whatsapp_message(to, message):
     """Envia mensagem pelo WhatsApp Cloud API."""
+    recipient_id = format_phone_number(to)
+
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json"
     }
     data = {
         "messaging_product": "whatsapp",
-        "to": to,
+        "to": recipient_id,
         "text": {"body": message}
     }
     response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
     return response.json()
+
+def format_phone_number(phone_number):
+    """Adiciona o '9' após o DDD se necessário"""
+    if len(phone_number) == 12 and phone_number.startswith("55"):  # Verifica se é um número brasileiro sem o '9'
+        return phone_number[:4] + "9" + phone_number[4:]
+    return phone_number
+
 
 # Inicia o servidor Flask
 if __name__ == "__main__":
