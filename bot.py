@@ -41,8 +41,9 @@ def webhook_verify():
 @app.route("/webhook", methods=["POST"])
 def webhook_receive():
     """Recebe mensagens do WhatsApp e responde automaticamente."""
-    print("request", request.json())
+
     data = request.get_json()
+    print("request", data)
     if data.get("object") == "whatsapp_business_account":
         for entry in data.get("entry", []):
             for message in entry.get("changes", []):
