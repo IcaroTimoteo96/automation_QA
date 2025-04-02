@@ -13,19 +13,23 @@ VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 WHATSAPP_API_URL = os.getenv("WHATSAPP_API_URL")
 
 # Nome do arquivo de datas
-BAPTISM_FILE = "batismo.txt"
+INFO_FILE = "informacoes.txt"
 
 # Inicializa o Flask
 app = Flask(__name__)
 
-# Função para ler as datas do arquivo
-def get_baptism_dates():
-    """Lê as datas do arquivo .txt e retorna o texto para o WhatsApp."""
-    if not os.path.exists(BAPTISM_FILE):
-        return "Ainda não há datas de batismo cadastradas."
-
-    with open(BAPTISM_FILE, "r", encoding="utf-8") as file:
-        return file.read()
+def get_information(option):
+    """Lê as informações do arquivo informacoes.txt e retorna o texto correto"""
+    try:
+        with open("informacoes.txt", "r", encoding="utf-8") as file:
+            content = file.read()
+            sections = content.split("\n\n")  # Divide as seções do arquivo
+            for section in sections:
+                if section.startswith(f"[{option}]"):
+                    return section.replace(f"[{option}] ", "")
+        return "Desculpe, não encontrei essa informação."
+    except FileNotFoundError:
+        return "Erro: arquivo de informações não encontrado."
 
 # Webhook para verificação do WhatsApp Cloud API
 @app.route("/webhook", methods=["GET"])
@@ -53,14 +57,18 @@ def webhook_receive():
                     phone_number = message_info["from"]
                     text = message_info["text"]["body"].lower()
 
-                    # Verifica palavras-chave na mensagem
-                    if "batismo" in text:
-                        reply = get_baptism_dates()
+                    if text in ["1", "2", "3"]:
+                        info = get_information(text)
+                        send_whatsapp_message(phone_number, info)
                     else:
-                        reply = "Desculpe, não entendi. Digite 'batismo' para saber mais."
+                        menu_text = (
+                        "Olá! Escolha uma das opções abaixo enviando o número correspondente:\n\n"
+                        "1️⃣ - Data de Batismo\n"
+                        "2️⃣ - Data de Crisma\n"
+                        "3️⃣ - Dias ou Horários de confissões\n"
+                        "4️⃣ - Falar com o atendimento")
 
-                    # Enviar resposta pelo WhatsApp
-                    send_whatsapp_message(phone_number, reply)
+                        send_whatsapp_message(phone_number, menu_text)
 
     return "OK", 200
 
@@ -76,6 +84,7 @@ def send_whatsapp_message(to, message):
     data = {
         "messaging_product": "whatsapp",
         "to": recipient_id,
+        "type": "text",
         "text": {"body": message}
     }
     response = requests.post(WHATSAPP_API_URL, headers=headers, json=data)
@@ -86,6 +95,7 @@ def format_phone_number(phone_number):
     if len(phone_number) == 12 and phone_number.startswith("55"):  # Verifica se é um número brasileiro sem o '9'
         return phone_number[:4] + "9" + phone_number[4:]
     return phone_number
+
 
 
 # Inicia o servidor Flask
